@@ -228,7 +228,7 @@ class _SavedScreenState extends State<SavedScreen> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () => context.go('/search'),
+              onPressed: () => context.go('/recipes'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFef6a42),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

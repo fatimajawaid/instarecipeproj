@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../services/meal_plan_service.dart';
+import '../services/pdf_service.dart';
 
 class GroceryListScreen extends StatefulWidget {
   const GroceryListScreen({super.key});
@@ -14,6 +15,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
   final MealPlanService _mealPlanService = MealPlanService();
   final TextEditingController _newItemController = TextEditingController();
   String _selectedCategory = 'Other';
+  bool _isGeneratingPdf = false;
 
   final List<String> _categories = [
     'Vegetables',
@@ -142,6 +144,59 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
     );
   }
 
+  Future<void> _downloadPdf() async {
+    if (_mealPlanService.groceryList.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'No items in grocery list to download',
+            style: GoogleFonts.plusJakartaSans(),
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isGeneratingPdf = true;
+    });
+
+    try {
+      await PdfService.generateAndDownloadGroceryListPdf(_mealPlanService.groceryList);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Grocery list PDF downloaded successfully!',
+              style: GoogleFonts.plusJakartaSans(),
+            ),
+            backgroundColor: const Color(0xFFef6a42),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to generate PDF: ${e.toString()}',
+              style: GoogleFonts.plusJakartaSans(),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGeneratingPdf = false;
+        });
+      }
+    }
+  }
+
   Map<String, List<GroceryItem>> _groupItemsByCategory() {
     Map<String, List<GroceryItem>> grouped = {};
     
@@ -202,10 +257,19 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                     ),
                   ),
                   PopupMenuButton(
-                    icon: const Icon(
-                      Icons.more_vert,
-                      color: Color(0xFF1b110d),
-                    ),
+                    icon: _isGeneratingPdf 
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Color(0xFF1b110d),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.more_vert,
+                            color: Color(0xFF1b110d),
+                          ),
                     itemBuilder: (context) => [
                       PopupMenuItem(
                         value: 'add',
@@ -234,6 +298,19 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                         ),
                       ),
                       PopupMenuItem(
+                        value: 'download',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.picture_as_pdf, color: Color(0xFF1b110d)),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Download PDF',
+                              style: GoogleFonts.plusJakartaSans(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
                         value: 'clear',
                         child: Row(
                           children: [
@@ -256,6 +333,9 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                           break;
                         case 'regenerate':
                           _mealPlanService.regenerateGroceryList();
+                          break;
+                        case 'download':
+                          _downloadPdf();
                           break;
                         case 'clear':
                           _showClearConfirmation();
@@ -334,6 +414,33 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
           ],
         ),
       ),
+      floatingActionButton: totalItems > 0 ? FloatingActionButton.extended(
+        onPressed: _isGeneratingPdf ? null : _downloadPdf,
+        backgroundColor: _isGeneratingPdf 
+            ? Colors.grey 
+            : const Color(0xFFef6a42),
+        icon: _isGeneratingPdf 
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(
+                Icons.picture_as_pdf,
+                color: Colors.white,
+              ),
+        label: Text(
+          _isGeneratingPdf ? 'Generating...' : 'Download PDF',
+          style: GoogleFonts.plusJakartaSans(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ) : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
