@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1088466638917",
+    "project_id": "instarecipe-eb125",
+    "storage_bucket": "instarecipe-eb125.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1088466638917:android:f0aa2fecf2591c86092b2c",
+        "android_client_info": {
+          "package_name": "com.iba.instarecipe"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDoigGPT-6DcndV8J_JhoKmRKh7sDJJ6J0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
